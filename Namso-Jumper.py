@@ -18,6 +18,7 @@ BACKG = pygame.image.load('imgs/BG.jpg')
 CASTLE = pygame.transform.scale2x(pygame.image.load('imgs/Castle.png'))
 
 SCORE_FONT = pygame.font.SysFont('comicsans', 75)
+LIFE_FONT = pygame.font.SysFont('comicsans', 50)
 
 #Defining the heroic attributes of this games main hero
 class Namso:
@@ -84,7 +85,6 @@ class Namso:
 
         win.blit(self.img, (x, y))
 
-
 #Defining the vile attributes of this games evil villain
 class Orc:
 
@@ -94,7 +94,7 @@ class Orc:
     #Defining other necessary parameters
     IMG_CLOCK = 2
     img_frame = 0
-    SPEED = 5
+    SPEED = 10
 
     #The heros position and appearance in the game
     def __init__(self, x):
@@ -131,12 +131,14 @@ class Orc:
         win.blit(self.img, (self.x, self.y))
 
 #Drawing and updating the game window and state
-def draw_window(win, namso, score, right_key, namsoX, namsoY, orcs):
+def draw_window(win, namso, score, right_key, namsoX, namsoY, orcs, lives):
     win.blit(BACKG, (0,0))
-    win.blit(CASTLE, (-30, 630))
+    win.blit(CASTLE, (-30, 620))
     namso.draw(win, right_key, namsoX, namsoY)
-    text = SCORE_FONT.render('Score: ' + str(score), 1, (255, 255, 255))
-    win.blit(text, (25, 25))
+    score_text = SCORE_FONT.render('Score: ' + str(score), 1, (255, 255, 255))
+    lives_text = SCORE_FONT.render('Lives: ' + str(lives), 1, (255, 255, 255))
+    win.blit(score_text, (25, 25))
+    win.blit(lives_text, (WIDTH-250, 25))
 
     for orc in orcs:
         orc.draw(win)
@@ -148,6 +150,7 @@ def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     run = True
     score = 0
+    lives = 3
 
     orcs = []
 
@@ -187,14 +190,14 @@ def main():
         if right_key == True:
             if move_ticker == 0:
                 move_ticker = 60
-                charX += 10
+                charX += 12
                 if charX >= 1875:
                     charX = 1875
 
         if right_key == False:
             if move_ticker == 0:
                 move_ticker = 60
-                charX -= 10
+                charX -= 12
                 if charX <= 225:
                     charX = 225
         
@@ -218,14 +221,19 @@ def main():
         if spawn_delay >= orc_spawn_trigger:
             orcs.append(Orc(1920))
             orc_ticker = time.time()
-            orc_spawn_trigger = random.randrange(2,6)
+            orc_spawn_trigger = random.randrange(1,3)
 
         for orc in orcs:
-            if orc.x <= 115:
+            if orc.x >= charX - 15 and orc.x <= charX + 15 and charY >= 700:
+                lives -= 1
                 orcs.remove(orc)
 
+            if orc.x <= 115:
+                orcs.remove(orc)
+                score += 1
+
         #Drawing the resulting actions
-        draw_window(win, namso, score, right_key, charX, charY, orcs)
+        draw_window(win, namso, score, right_key, charX, charY, orcs, lives)
 
     pygame.quit()
     quit()
