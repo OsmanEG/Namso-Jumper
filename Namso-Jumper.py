@@ -14,11 +14,10 @@ NAMSO_LEFT = [pygame.transform.scale2x(pygame.image.load('imgs/Namso/Left' + str
 ORC_LEFT = [pygame.transform.scale2x(pygame.image.load('imgs/Orc/Left' + str(x) + '.png')) for x in range(1,9)]
 
 BACKG = pygame.image.load('imgs/BG.jpg')
-
 CASTLE = pygame.transform.scale2x(pygame.image.load('imgs/Castle.png'))
 
-SCORE_FONT = pygame.font.SysFont('comicsans', 75)
-LIFE_FONT = pygame.font.SysFont('comicsans', 50)
+STAT_FONT = pygame.font.SysFont('comicsans', 75)
+HS_FONT = pygame.font.SysFont('comicsans', 40)
 
 #Defining the heroic attributes of this games main hero
 class Namso:
@@ -131,14 +130,24 @@ class Orc:
         win.blit(self.img, (self.x, self.y))
 
 #Drawing and updating the game window and state
-def draw_window(win, namso, score, right_key, namsoX, namsoY, orcs, lives):
+def draw_window(win, namso, score, right_key, namsoX, namsoY, orcs, lives, highscore, gamestart):
     win.blit(BACKG, (0,0))
     win.blit(CASTLE, (-30, 620))
     namso.draw(win, right_key, namsoX, namsoY)
-    score_text = SCORE_FONT.render('Score: ' + str(score), 1, (255, 255, 255))
-    lives_text = SCORE_FONT.render('Lives: ' + str(lives), 1, (255, 255, 255))
+    score_text = STAT_FONT.render('Score: ' + str(score), 1, (255, 255, 255))
+    hs_text = HS_FONT.render('High Score: ' + str(highscore), 1, (255, 255, 255))
+    lives_text = STAT_FONT.render('Lives: ' + str(lives), 1, (255, 255, 255))
+    title_text = STAT_FONT.render('Namso Jumper!', 1, (255, 255, 255))
+    info_text = HS_FONT.render('Use the arrow keys to jump and change direction!', 1, (255, 255, 255))
+    start_text = HS_FONT.render('PRESS SPACE TO START!', 1, (255, 255, 255))
     win.blit(score_text, (25, 25))
+    win.blit(hs_text, (25, 90))
     win.blit(lives_text, (WIDTH-250, 25))
+    win.blit(title_text, (750, 50))
+
+    if gamestart == False:
+        win.blit(info_text, (640, 250))
+        win.blit(start_text, (780, 300))
 
     for orc in orcs:
         orc.draw(win)
@@ -151,6 +160,7 @@ def main():
     run = True
     score = 0
     lives = 3
+    gamestart = False
 
     orcs = []
 
@@ -162,6 +172,7 @@ def main():
     charY = 780
     charJump = False
     vert_vel = 4
+    highscore = 0
 
     physTime = 0
 
@@ -182,58 +193,80 @@ def main():
                     right_key = False
                 if event.key == pygame.K_UP:
                     charJump = True
+                if event.key == pygame.K_SPACE:
+                    gamestart = True
 
+
+        #Keeping track of the highscore
+        hisc = open('highscore.txt', 'r')
+        highscore = hisc.read()
+        highscore_int = int(highscore)
+
+        if score > highscore_int:
+            hisc = open('highscore.txt', 'w+')
+            hisc.write(str(score))
+
+        hisc.close()
+
+
+        if gamestart == True: 
+        
+            #Handling horizontal character movement
+            move_ticker = 0
+
+            if right_key == True:
+                if move_ticker == 0:
+                    move_ticker = 60
+                    charX += 16
+                    if charX >= 1875:
+                        charX = 1875
+
+            if right_key == False:
+                if move_ticker == 0:
+                    move_ticker = 60
+                    charX -= 16
+                    if charX <= 225:
+                        charX = 225
             
-        #Handling horizontal character movement
-        move_ticker = 0
+            if move_ticker > 0:
+                move_ticker -= 1
 
-        if right_key == True:
-            if move_ticker == 0:
-                move_ticker = 60
-                charX += 12
-                if charX >= 1875:
-                    charX = 1875
-
-        if right_key == False:
-            if move_ticker == 0:
-                move_ticker = 60
-                charX -= 12
-                if charX <= 225:
-                    charX = 225
+            #Handling vertical character movement
+            if charJump == True:
+                physTime += 1.0
+            
+            charY = charY - vert_vel*physTime + 0.25*physTime**2
         
-        if move_ticker > 0:
-            move_ticker -= 1
+            if charY > 780:
+                charJump = False
+                physTime = 0
+                charY = 780
+            
+            spawn_delay = time.time() - orc_ticker
 
-        #Handling vertical character movement
-        if charJump == True:
-            physTime += 1.0
-        
-        charY = charY - vert_vel*physTime + 0.25*physTime**2
+            #Handling the spawning of orcs
+            if spawn_delay >= orc_spawn_trigger:
+                orcs.append(Orc(1920))
+                orc_ticker = time.time()
+                orc_spawn_trigger = random.randrange(1,3) - 0.2
+
+            for orc in orcs:
+                if orc.x >= charX - 15 and orc.x <= charX + 15 and charY >= 700:
+                    lives -= 1
+                    orcs.remove(orc)
+
+                if orc.x <= 115:
+                    orcs.remove(orc)
+                    score += 1
     
-        if charY > 780:
-            charJump = False
-            physTime = 0
-            charY = 780
-        
-        spawn_delay = time.time() - orc_ticker
-
-        #Handling the spawning of orcs
-        if spawn_delay >= orc_spawn_trigger:
-            orcs.append(Orc(1920))
-            orc_ticker = time.time()
-            orc_spawn_trigger = random.randrange(1,3)
-
-        for orc in orcs:
-            if orc.x >= charX - 15 and orc.x <= charX + 15 and charY >= 700:
-                lives -= 1
-                orcs.remove(orc)
-
-            if orc.x <= 115:
-                orcs.remove(orc)
-                score += 1
 
         #Drawing the resulting actions
-        draw_window(win, namso, score, right_key, charX, charY, orcs, lives)
+        if lives >= 0:
+            draw_window(win, namso, score, right_key, charX, charY, orcs, lives, highscore, gamestart)
+        else:
+            gamestart = False
+            main()
+
 
     pygame.quit()
     quit()
