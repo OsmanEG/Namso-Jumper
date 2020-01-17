@@ -261,7 +261,7 @@ def main():
     
 
         #Drawing the resulting actions
-        if lives >= 0:
+        if lives > 0:
             draw_window(win, namso, score, right_key, charX, charY, orcs, lives, highscore, gamestart)
         else:
             gamestart = False
