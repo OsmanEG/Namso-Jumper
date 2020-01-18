@@ -226,6 +226,7 @@ def main():
                     move_ticker = 60
                     charX -= 16
                     if charX <= 225:
+                        lives -= 1
                         charX = 225
             
             if move_ticker > 0:
