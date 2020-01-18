@@ -249,7 +249,18 @@ def main():
             if spawn_delay >= orc_spawn_trigger:
                 orcs.append(Orc(1920))
                 orc_ticker = time.time()
-                orc_spawn_trigger = random.randrange(1,3) - 0.2
+                orc_spawn_trigger = random.randrange(1,3)
+
+                if score > 20:
+                    orc_spawn_trigger = orc_spawn_trigger/1.2
+                if score > 40:
+                    orc_spawn_trigger = orc_spawn_trigger/1.2
+                if score > 60:
+                    orc_spawn_trigger = orc_spawn_trigger/1.2
+                if score > 80:
+                    orc_spawn_trigger = orc_spawn_trigger/1.2
+                if score > 100:
+                    orc_spawn_trigger = orc_spawn_trigger/1.2
 
             for orc in orcs:
                 if orc.x >= charX - 15 and orc.x <= charX + 15 and charY >= 700:
